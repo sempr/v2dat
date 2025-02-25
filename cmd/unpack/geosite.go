@@ -106,12 +106,10 @@ func groupByAttributes(domains []*v2data.Domain) map[string][]*v2data.Domain {
 			}
 			attrs[attr.Key] = append(attrs[attr.Key], domain)
 		}
-		if len(domain.Attribute) == 0 {
-			if _, ok := attrs[""]; !ok {
-				attrs[""] = make([]*v2data.Domain, 0)
-			}
-			attrs[""] = append(attrs[""], domain)
+		if _, ok := attrs[""]; !ok {
+			attrs[""] = make([]*v2data.Domain, 0)
 		}
+		attrs[""] = append(attrs[""], domain)
 	}
 	return attrs
 }
