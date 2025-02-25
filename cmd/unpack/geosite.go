@@ -82,12 +82,38 @@ func unpackGeoSite(args *unpackArgs) error {
 		}
 	} else { // If tag is omitted, unpack all tags.
 		for tag, domains := range entries {
-			if err := save(tag, domains); err != nil {
-				return fmt.Errorf("failed to save %s, %w", tag, err)
+			attrs_map := groupByAttributes(domains)
+			for attr, domains := range attrs_map {
+				ntag := tag
+				if attr != "" {
+					ntag = fmt.Sprintf("%s@%s", tag, attr)
+				}
+				if err := save(ntag, domains); err != nil {
+					return fmt.Errorf("failed to save %s, %w", tag, err)
+				}
 			}
 		}
 	}
 	return nil
+}
+
+func groupByAttributes(domains []*v2data.Domain) map[string][]*v2data.Domain {
+	attrs := make(map[string][]*v2data.Domain)
+	for _, domain := range domains {
+		for _, attr := range domain.Attribute {
+			if _, ok := attrs[attr.Key]; !ok {
+				attrs[attr.Key] = make([]*v2data.Domain, 0)
+			}
+			attrs[attr.Key] = append(attrs[attr.Key], domain)
+		}
+		if len(domain.Attribute) == 0 {
+			if _, ok := attrs[""]; !ok {
+				attrs[""] = make([]*v2data.Domain, 0)
+			}
+			attrs[""] = append(attrs[""], domain)
+		}
+	}
+	return attrs
 }
 
 func convertV2DomainToTextFile(domain []*v2data.Domain, file string) error {
